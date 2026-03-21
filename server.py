@@ -1,4 +1,12 @@
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from flask import Flask, request, jsonify 
+=======
+from flask import Flask, request, jsonify, send_from_directory
+>>>>>>> Stashed changes
+=======
+from flask import Flask, request, jsonify, send_from_directory
+>>>>>>> Stashed changes
 import sqlite3, bcrypt, secrets, datetime
 
 app = Flask(__name__)
@@ -49,6 +57,7 @@ def register():
         return jsonify({'status': 'fail', 'message': 'Username already exists'})
 
 
+#Login Post server
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
@@ -73,8 +82,27 @@ def login():
         else:
             return jsonify({'status': 'fail', 'message': 'Invalid credentials'})
         
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 @app.route('/',)
 def index():
+=======
+=======
+>>>>>>> Stashed changes
+
+#Home Website page
+@app.route("/")
+def home():
+    print("Home route hit")
+    try:
+        return send_from_directory("C:\\Users\\sande\\Code\\Bridge\\static", "index.html")
+    except Exception as e:
+        print(f"Error: {e}")
+        return str(e), 500
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
 
 if __name__ == '__main__':
