@@ -10,8 +10,12 @@ users = [
 
 @app.route("/")
 def home():
-        print("Website active")
-        return send_from_directory("static", "index.html")
+    print("Home route hit")
+    try:
+        return send_from_directory("C:\\Users\\sande\\Code\\Bridge\\static", "index.html")
+    except Exception as e:
+        print(f"Error: {e}")
+        return str(e), 500
 
 
 @app.route("/login", methods=["POST"])
@@ -28,9 +32,6 @@ def login():
     print(f"Received login attempt for username: {username}"
           f" with password: {password}")
     
-    
-        
-
     for user in users:
         if user["username"] == username and user["password"] == password:
             return jsonify({"status": "success"})
