@@ -1,12 +1,4 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-from flask import Flask, request, jsonify 
-=======
 from flask import Flask, request, jsonify, send_from_directory
->>>>>>> Stashed changes
-=======
-from flask import Flask, request, jsonify, send_from_directory
->>>>>>> Stashed changes
 import sqlite3, bcrypt, secrets, datetime
 
 app = Flask(__name__)
@@ -82,13 +74,7 @@ def login():
         else:
             return jsonify({'status': 'fail', 'message': 'Invalid credentials'})
         
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-@app.route('/',)
-def index():
-=======
-=======
->>>>>>> Stashed changes
+
 
 #Home Website page
 @app.route("/")
@@ -99,9 +85,6 @@ def home():
     except Exception as e:
         print(f"Error: {e}")
         return str(e), 500
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
 >>>>>>> Stashed changes
 
 
