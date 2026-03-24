@@ -89,7 +89,7 @@ def login():
 #def home():
 #    print("Home route hit")
 #    try:
-#        return send_from_directory("C:\\Users\\sande\\Code\\Bridge\\static", "index.html")
+#        return send_from_directory("\static", "index.html")
 #    except Exception as e:
 #        print(f"Error: {e}")
 #        return str(e), 500
