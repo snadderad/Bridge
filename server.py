@@ -32,10 +32,13 @@ init_db()
 
 @app.route('/register', methods=['POST'])
 def register():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    data = request.get_json(force=True)
+    username = data.get('username')
+    password = data.get('password')
 
     if not username or not password:
+        print("Missing fields in registration")
+        print("exit code 1")
         return jsonify({'status': 'fail', 'message': 'Missing fields'})
 
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -44,17 +47,22 @@ def register():
         with get_db() as db:
             db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, pw_hash))
             db.commit()
+
+            print (f"User {username} registered successfully")
+
         return jsonify({'status': 'success', 'message': 'User created'})
+        
     except sqlite3.IntegrityError:
+        print(f"Username {username} already exists")
         return jsonify({'status': 'fail', 'message': 'Username already exists'})
 
 
 #Login Post server
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    device = request.form.get('device', 'unknown')  # send device name from App Inventor
+    data = request.get_json(force=True)
+    username = data.get('username')
+    password = data.get('password')
 
     with get_db() as db:
         user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
@@ -63,7 +71,7 @@ def login():
             token = secrets.token_hex(32)
             db.execute(
                 'INSERT INTO sessions (user_id, token, device, logged_in_at) VALUES (?, ?, ?, ?)',
-                (user['id'], token, device, datetime.datetime.now().isoformat())
+                (user['id'], token, 'unknown', datetime.datetime.now().isoformat())
             )
             db.commit()
             return jsonify({
@@ -77,15 +85,15 @@ def login():
 
 
 #Home Website page
-@app.route("/")
-def home():
-    print("Home route hit")
-    try:
-        return send_from_directory("C:\\Users\\sande\\Code\\Bridge\\static", "index.html")
-    except Exception as e:
-        print(f"Error: {e}")
-        return str(e), 500
->>>>>>> Stashed changes
+#@app.route("/")
+#def home():
+#    print("Home route hit")
+#    try:
+#        return send_from_directory("C:\\Users\\sande\\Code\\Bridge\\static", "index.html")
+#    except Exception as e:
+#        print(f"Error: {e}")
+#        return str(e), 500
+
 
 
 if __name__ == '__main__':
