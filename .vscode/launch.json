@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flask",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/server.py",
+            "env": {
+                "FLASK_ENV": "development"
+            },
+            "args": [],
+            "jinja": true
+        }
+    ]
+}

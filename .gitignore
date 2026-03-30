@@ -1,6 +1,8 @@
-/static/*
-venv/
-__pycache__/
-*.pyc
 .env
 instance/
+*.pyc
+__pycache__/
+*.sqlite3
+/static/*
+venv/
+.vscode/*.venv
