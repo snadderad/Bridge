@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+<body>
+
+<div class="header">
+  <h1>Ont<span>moet</span></h1>
+  <div class="header-dot"></div>
+</div>
+
+<div class="feed" id="feed">
+  <div class="state-msg">
+    <div class="spinner"></div>
+    Profielen laden…
+  </div>
+</div>
+
+<script>
+  // CONFIG — change this to your actual Flask base URL
+  const API_BASE = "https://api.snadex.nl";
+
+  // Get session token passed from App Inventor via URL param
+  // App Inventor should open: feed.html?token=USERTOKEN
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') || '';
+
+  const feed = document.getElementById('feed');
+
+  async function loadFeed() {
+    try {
+      const res = await fetch(`${API_BASE}/feed`, {
+        headers: { 'Authorization': token }
+      });
+
+      if (!res.ok) throw new Error('Server error ' + res.status);
+
+      const users = await res.json();
+
+      if (!users.length) {
+        feed.innerHTML = `
+          <div class="state-msg">
+            <div class="icon">🌿</div>
+            Geen nieuwe profielen op dit moment.
+          </div>`;
+        return;
+      }
+
+      feed.innerHTML = '';
+      users.forEach(user => renderCard(user));
+
+    } catch (err) {
+      feed.innerHTML = `
+        <div class="state-msg">
+          <div class="icon">⚠️</div>
+          Kon feed niet laden.<br><small>${err.message}</small>
+        </div>`;
+    }
+  }
+
+  function getInitials(name) {
+    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  function renderCard(user) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // Avatar: use profile_pic URL if available, else initials
+    let avatarHTML;
+    if (user.profile_pic) {
+      avatarHTML = `<img class="avatar" src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="avatar-initials" style="display:none">${getInitials(user.name)}</div>`;
+    } else {
+      avatarHTML = `<div class="avatar-initials">${getInitials(user.name)}</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="card-top">
+        ${avatarHTML}
+        <div class="user-info">
+          <div class="user-name">${user.name}</div>
+          <div class="user-age">${user.age} jaar</div>
+        </div>
+      </div>
+      <div class="card-bio">${user.bio || 'Geen bio ingevuld.'}</div>
+      <div class="card-actions">
+        <button class="btn-connect" onclick="connect(this, ${user.id})">Verbinden</button>
+        <button class="btn-skip" onclick="skip(this)">Overslaan</button>
+      </div>
+    `;
+
+    feed.appendChild(card);
+  }
+
+  async function connect(btn, userId) {
+    btn.disabled = true;
+    btn.textContent = '⏳';
+
+    try {
+      const res = await fetch(`${API_BASE}/connect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({ target_id: userId })
+      });
+
+      if (res.ok) {
+        btn.textContent = '✓ Verbonden';
+        btn.classList.add('connected');
+      } else {
+        btn.textContent = 'Verbinden';
+        btn.disabled = false;
+      }
+    } catch {
+      btn.textContent = 'Verbinden';
+      btn.disabled = false;
+    }
+  }
+
+  function skip(btn) {
+    const card = btn.closest('.card');
+    card.style.transition = 'opacity 0.3s, transform 0.3s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(40px)';
+    setTimeout(() => card.remove(), 300);
+  }
+
+  loadFeed();
+</script>
+</body>
+</html>
