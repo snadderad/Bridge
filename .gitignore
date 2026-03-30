@@ -1,8 +1,17 @@
+/static/*
+venv/*
+__pycache__/
+*.pyc
 .env
 instance/
-*.pyc
-__pycache__/
 *.sqlite3
-/static/*
+.vscode/*
+cat > .gitignore << EOF
 venv/
-.vscode/*.venv
+__pycache__/
+*.pyc
+*.db
+.env
+node_modules/
+.vscode/
+EOF

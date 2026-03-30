@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Profiel bewerken</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ 
+<div class="header">
+  <h1>Mijn <span>profiel</span></h1>
+</div>
+ 
+<div class="form">
+ 
+  <!-- Avatar -->
+  <div class="avatar-section">
+    <div class="avatar-preview" id="avatarPreview">?</div>
+    <div class="field" style="width:100%">
+      <label>Profielfoto URL</label>
+      <input type="url" id="profilePic" placeholder="https://..." oninput="updateAvatar()">
+    </div>
+  </div>
+ 
+  <!-- Name -->
+  <div class="field">
+    <label>Naam</label>
+    <input type="text" id="name" placeholder="Jouw naam" oninput="updateAvatar()">
+  </div>
+ 
+  <!-- Age -->
+  <div class="field">
+    <label>Leeftijd</label>
+    <input type="number" id="age" placeholder="65" min="18" max="120">
+  </div>
+ 
+  <!-- Bio -->
+  <div class="field">
+    <label>Over mij</label>
+    <textarea id="bio" placeholder="Vertel iets over jezelf..."></textarea>
+  </div>
+ 
+  <!-- Interests -->
+  <div class="field">
+    <label>Interesses</label>
+    <div class="interests-grid">
+      <div class="interest-chip" onclick="toggleInterest(this, 'Tuinieren')">
+        <div class="check"></div><span>Tuinieren</span>
+      </div>
+      <div class="interest-chip" onclick="toggleInterest(this, 'Kunst & cultuur')">
+        <div class="check"></div><span>Kunst & cultuur</span>
+      </div>
+      <div class="interest-chip" onclick="toggleInterest(this, 'Lezen')">
+        <div class="check"></div><span>Lezen</span>
+      </div>
+      <div class="interest-chip" onclick="toggleInterest(this, 'Koken')">
+        <div class="check"></div><span>Koken</span>
+      </div>
+      <div class="interest-chip" onclick="toggleInterest(this, 'Muziek')">
+        <div class="check"></div><span>Muziek</span>
+      </div>
+      <div class="interest-chip" onclick="toggleInterest(this, 'Geschiedenis')">
+        <div class="check"></div><span>Geschiedenis</span>
+      </div>
+    </div>
+  </div>
+ 
+  <button class="btn-save" onclick="saveProfile()">Opslaan</button>
+</div>
+ 
+<div class="toast" id="toast"></div>
+ 
+<script>
+  const API_BASE = "https://api.snadex.nl";
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') || '';
+ 
+  let selectedInterests = [];
+ 
+  function toggleInterest(el, value) {
+    el.classList.toggle('selected');
+    if (selectedInterests.includes(value)) {
+      selectedInterests = selectedInterests.filter(i => i !== value);
+    } else {
+      selectedInterests.push(value);
+    }
+  }
+ 
+  function updateAvatar() {
+    const name = document.getElementById('name').value.trim();
+    const pic = document.getElementById('profilePic').value.trim();
+    const preview = document.getElementById('avatarPreview');
+ 
+    if (pic) {
+      preview.innerHTML = `<img src="${pic}" onerror="this.style.display='none'" alt="">`;
+    } else if (name) {
+      const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      preview.innerHTML = initials;
+    } else {
+      preview.innerHTML = '?';
+    }
+  }
+ 
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+ 
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API_BASE}/profile`, {
+        headers: { 'Authorization': token }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+ 
+      document.getElementById('name').value = data.name || '';
+      document.getElementById('age').value = data.age || '';
+      document.getElementById('bio').value = data.bio || '';
+      document.getElementById('profilePic').value = data.profile_pic || '';
+      updateAvatar();
+ 
+      if (data.interests) {
+        const saved = data.interests.split(',').map(i => i.trim());
+        document.querySelectorAll('.interest-chip').forEach(chip => {
+          const val = chip.querySelector('span').textContent;
+          if (saved.includes(val)) {
+            chip.classList.add('selected');
+            selectedInterests.push(val);
+          }
+        });
+      }
+    } catch (e) {}
+  }
+ 
+  async function saveProfile() {
+    const btn = document.querySelector('.btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Opslaan...';
+ 
+    try {
+      const res = await fetch(`${API_BASE}/profile/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({
+          name: document.getElementById('name').value.trim(),
+          age: parseInt(document.getElementById('age').value) || null,
+          bio: document.getElementById('bio').value.trim(),
+          profile_pic: document.getElementById('profilePic').value.trim(),
+          interests: selectedInterests.join(', ')
+        })
+      });
+ 
+      if (res.ok) {
+        showToast('Profiel opgeslagen!');
+      } else {
+        showToast('Er ging iets mis.');
+      }
+    } catch {
+      showToast('Geen verbinding.');
+    }
+ 
+    btn.disabled = false;
+    btn.textContent = 'Opslaan';
+  }
+ 
+  loadProfile();
+</script>
+</body>
+</html>

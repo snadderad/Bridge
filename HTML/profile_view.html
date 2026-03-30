@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Profiel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ 
+<div class="header">
+  <h1>Mijn <span>profiel</span></h1>
+</div>
+ 
+<div id="main" style="display:none">
+  <div class="profile-hero">
+    <div class="profile-avatar" id="avatar">?</div>
+    <div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-age" id="profileAge"></div>
+    </div>
+    <button class="btn-edit" onclick="goEdit()">Profiel bewerken</button>
+  </div>
+ 
+  <div class="container">
+    <div class="section">
+      <div class="section-label">Over mij</div>
+      <div class="section-content" id="profileBio">Nog geen bio ingevuld.</div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-label">Interesses</div>
+      <div id="interestsContainer"></div>
+    </div>
+  </div>
+</div>
+ 
+<div id="loading" class="state-msg">
+  <div class="spinner"></div>
+  Profiel laden…
+</div>
+ 
+<script>
+  const API_BASE = "https://api.snadex.nl";
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') || '';
+ 
+  function getInitials(name) {
+    return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+ 
+  function goEdit() {
+    window.location.href = `${API_BASE}/profile/edit?token=${token}`;
+  }
+ 
+  async function loadProfile() {
+    try {
+      const res = await fetch(`${API_BASE}/profile`, {
+        headers: { 'Authorization': token }
+      });
+ 
+      if (!res.ok) throw new Error('Unauthorized');
+      const user = await res.json();
+ 
+      // Avatar
+      const avatar = document.getElementById('avatar');
+      if (user.profile_pic) {
+        avatar.innerHTML = `<img src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none'">`;
+      } else {
+        avatar.textContent = getInitials(user.name);
+      }
+ 
+      document.getElementById('profileName').textContent = user.name || 'Naamloos';
+      document.getElementById('profileAge').textContent = user.age ? `${user.age} jaar` : '';
+      document.getElementById('profileBio').textContent = user.bio || 'Nog geen bio ingevuld.';
+ 
+      // Interests
+      const container = document.getElementById('interestsContainer');
+      if (user.interests) {
+        const tags = user.interests.split(',').map(i => i.trim()).filter(Boolean);
+        if (tags.length) {
+          const wrap = document.createElement('div');
+          wrap.className = 'interests-wrap';
+          tags.forEach(tag => {
+            const el = document.createElement('span');
+            el.className = 'interest-tag';
+            el.textContent = tag;
+            wrap.appendChild(el);
+          });
+          container.appendChild(wrap);
+        } else {
+          container.innerHTML = '<div class="empty-interests">Nog geen interesses gekozen.</div>';
+        }
+      } else {
+        container.innerHTML = '<div class="empty-interests">Nog geen interesses gekozen.</div>';
+      }
+ 
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+ 
+    } catch (err) {
+      document.getElementById('loading').innerHTML = `
+        <div class="icon">Fatal error</div>
+        Kon profiel niet laden.`;
+    }
+  }
+ 
+  loadProfile();
+</script>
+</body>
+</html>
