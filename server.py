@@ -8,7 +8,8 @@ from flask import Flask, request, jsonify, send_from_directory, send_file
 
 
 app = Flask(__name__)
-DB_PATH = 'Userdata/users.db'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'Userdata', 'users.db')
 
 # ── Database helpers ──────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ def get_db():
 
 
 def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with get_db() as db:
         db.execute('''CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,6 +99,13 @@ def unauthorized_response():
     return jsonify({'error': 'Unauthorized'}), 401
 
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Log the exception so the service user can debug 500 errors.
+    app.logger.exception('Unhandled exception')
+    return jsonify({'status': 'error', 'message': 'Internal server error', 'error': str(e)}), 500
+
+
 # ── Auth routes ───────────────────────────────────────────────────────────────
 
 @app.route('/register', methods=['POST'])
@@ -149,9 +158,12 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json(force=True)
+    data = request.get_json(silent=True) or {}
     username = data.get('username')
     password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'status': 'fail', 'message': 'Missing credentials'}), 400
 
     user = query_db('SELECT * FROM users WHERE username = ?', (username,), one=True)
 
@@ -253,15 +265,63 @@ def profile_update():
     user_id = get_user_from_token(token)
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
-    data = request.get_json(force=True)
+
+    data = None
+    if request.is_json:
+        data = request.get_json(silent=True)
+    if data is None:
+        data = request.form.to_dict() if request.form else {}
+
+    if not isinstance(data, dict):
+        return jsonify({'status': 'fail', 'message': 'Invalid JSON'}), 400
+
+    age_value = data.get('age')
+    if age_value is not None and age_value != '':
+        try:
+            age_value = int(age_value)
+        except (ValueError, TypeError):
+            return jsonify({'status': 'fail', 'message': 'Invalid age value'}), 400
+    else:
+        age_value = None
+
     db = get_db()
     db.execute("""
         UPDATE users SET name=?, age=?, bio=?, profile_pic=?, interests=? WHERE id=?
-    """, (data.get('name'), data.get('age'), data.get('bio'), data.get('profile_pic'), data.get('interests'), user_id))
+    """, (data.get('name'), age_value, data.get('bio'), data.get('profile_pic'), data.get('interests'), user_id))
     db.commit()
     db.close()
     return jsonify({"status": "success"})
 
+# -- dms routes (uncomment when ready) ─────────────────────────────────────────────
+
+@app.route('/chat/styles.css')
+def chat_styles():
+    return send_file('HTML/styles.css')
+
+
+@app.route('/chat/view')
+def chat_view():
+    return send_file('HTML/chat.html')
+
+@app.route('/chat')
+def chat():
+    token = request.headers.get('Authorization') or request.args.get('token')
+    user_id = get_user_from_token(token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        db = get_db()
+        chats = db.execute("""
+            SELECT u.id as user_id, u.name, u.profile_pic,
+                   NULL as last_message, NULL as last_time
+            FROM connections c
+            JOIN users u ON u.id = c.target_id
+            WHERE c.user_id = ?
+        """, (user_id,)).fetchall()
+        db.close()
+        return jsonify([dict(c) for c in chats])
+    except Exception as e:
+        return jsonify([])
 
 
 
