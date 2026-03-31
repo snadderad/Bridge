@@ -3,7 +3,9 @@ import sqlite3
 import bcrypt
 import secrets
 import datetime
+import socket
 from flask import Flask, request, jsonify, send_from_directory, send_file
+
 
 app = Flask(__name__)
 DB_PATH = 'Userdata/users.db'
@@ -26,8 +28,15 @@ def init_db():
             age INTEGER,
             bio TEXT,
             profile_pic TEXT,
+            interests TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )''')
+
+        # Ensure backward compatibility for older DB schema lacking interests column
+        existing_columns = [row['name'] for row in db.execute("PRAGMA table_info(users)").fetchall()]
+        if 'interests' not in existing_columns:
+            db.execute('ALTER TABLE users ADD COLUMN interests TEXT')
+
         db.execute('''CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -54,15 +63,34 @@ def query_db(query, args=(), one=False):
 
 # ── Utility helpers ────────────────────────────────────────────────────────────
 
+def is_debug_mode():
+    debug_env = os.getenv('DEBUG_MODE', 'False').strip().lower()
+    return debug_env in ('1', 'true', 'yes', 'on')
+
+
 def get_token_from_request():
     return request.headers.get('Authorization') or request.args.get('token')
 
 
 def get_user_from_token(token):
-    if not token:
-        return None
-    row = query_db('SELECT user_id FROM sessions WHERE token = ?', (token,), one=True)
-    return row['user_id'] if row else None
+    # Normal auth path (token based)
+    if token:
+        row = query_db('SELECT user_id FROM sessions WHERE token = ?', (token,), one=True)
+        if row:
+            return row['user_id']
+
+    # Debug mode bypass for local dev/testing when no token is provided
+    if is_debug_mode():
+        # Prefer explicit debug-user id if provided, otherwise first user
+        debug_user_id = os.getenv('DEBUG_USER_ID')
+        if debug_user_id:
+            return int(debug_user_id)
+
+        row = query_db('SELECT id FROM users ORDER BY id LIMIT 1', one=True)
+        if row:
+            return row['id']
+
+    return None
 
 
 def unauthorized_response():
@@ -73,23 +101,50 @@ def unauthorized_response():
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.get_json(force=True)
+    if request.is_json:
+        data = request.get_json(force=True)
+    else:
+        # support form submissions from HTML forms (x-www-form-urlencoded/multipart)
+        data = request.form.to_dict()
+
     username = data.get('username')
     password = data.get('password')
 
     if not username or not password:
         return jsonify({'status': 'fail', 'message': 'Missing fields'}), 400
 
+    name = data.get('name')
+    age = data.get('age')
+    bio = data.get('bio')
+    profile_pic = data.get('profile_pic')
+    interests = data.get('interests')
+
+    print(f"Registering user: {username}, name: {name}, age: {age}, bio: {bio}, profile_pic: {profile_pic}, interests: {interests}")
+
+    # Convert age if provided (make sure it's an int or None)
+    if age is not None:
+        try:
+            age = int(age)
+        except (ValueError, TypeError):
+            return jsonify({'status': 'fail', 'message': 'Invalid age value'}), 400
+
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
     try:
         with get_db() as db:
-            db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, pw_hash))
+            db.execute(
+                'INSERT INTO users (username, password_hash, name, age, bio, profile_pic, interests) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (username, pw_hash, name, age, bio, profile_pic, interests)
+            )
             db.commit()
         return jsonify({'status': 'success', 'message': 'User created'})
 
     except sqlite3.IntegrityError:
         return jsonify({'status': 'fail', 'message': 'Username already exists'}), 409
+    except sqlite3.OperationalError as e:
+        return jsonify({'status': 'fail', 'message': 'Database error', 'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'status': 'fail', 'message': 'Unexpected error', 'error': str(e)}), 500
 
 
 @app.route('/login', methods=['POST'])
@@ -220,6 +275,9 @@ def profile_update():
 
 
 if __name__ == '__main__':
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex(('localhost', 3000)) == 0:
+            print("Port 3000 is already in use. Exiting.")
+            exit(1)
     init_db()
-    port = int(os.environ.get('PORT', 3000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=3000)

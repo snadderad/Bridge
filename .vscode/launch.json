@@ -1,16 +1,11 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Flask",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/server.py",
-            "env": {
-                "FLASK_ENV": "development"
-            },
-            "args": [],
-            "jinja": true
-        }
-    ]
+  "name": "Python: server",
+  "type": "python",
+  "request": "launch",
+  "program": "${workspaceFolder}/server.py",
+  "console": "integratedTerminal",
+  "env": {
+    "DEBUG_MODE": "true",
+    "DEBUG_USER_ID": "1"
+  }
 }
