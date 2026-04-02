@@ -1,10 +1,12 @@
 # Bridge Server
 
-- **Project: Bridge**
+- **Project: Bridge, Gemaakt door Snadderad**
 - **Doel: Oudere mensen met elkaar verbinden via een eenvoudige chat/social app.**
 - **Type: School/MIT project,** ***niet bedoeld voor publieke release.***
 
 Dit is de backend server voor de Bridge-app. Hij regelt gebruikers, profielen, connecties en berichten. De server draait over HTTP op poort 3000.
+
+
 
 # Features
 - Gebruikers registreren en inloggen met gehashte wachtwoorden (bcrypt)
