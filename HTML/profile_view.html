@@ -6,76 +6,223 @@
 <title>Profiel</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+  /* ── Banner ── */
+  .profile-banner {
+    width: 100%;
+    height: 130px;
+    background: linear-gradient(135deg, #c0392b 0%, #8b1a1a 40%, #5a2d0c 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 20px,
+      rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 40px
+    );
+  }
+
+  /* ── Avatar overlap ── */
+ .profile-avatar-wrap {
+    margin-top: -20px;  
+    margin-bottom: 16px;
+}
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    max-width: 480px;
+    margin: 0 auto 16px;
+    padding: 0 16px;
+  }
+  .stats-inner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .stat-item {
+    flex: 1;
+    padding: 16px 8px;
+    text-align: center;
+    position: relative;
+  }
+  .stat-item + .stat-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; height: 60%;
+    width: 1px;
+    background: var(--border);
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 500;
+  }
+
+  /* ── Section icon badge ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 16px 0;
+  }
+  .section-icon {
+    width: 28px; height: 28px;
+    background: var(--accent2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-icon svg {
+    width: 14px; height: 14px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Hover & animation extras ── */
+  .profile-avatar { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .profile-avatar:hover { transform: scale(1.04); box-shadow: 0 12px 40px rgba(0,0,0,0.18); }
+  .interest-tag { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .interest-tag:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(192,57,43,0.12); }
+  .btn-edit:hover { background: var(--accent); color: #fff; box-shadow: 0 4px 16px rgba(192,57,43,0.28); }
+
+  .section { opacity: 0; transform: translateY(16px); animation: fadeUp 0.4s ease forwards; }
+  .section:nth-child(1) { animation-delay: 0.10s; }
+  .section:nth-child(2) { animation-delay: 0.18s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+</style>
 </head>
 <body>
- 
+
 <div class="header">
   <h1>Mijn <span>profiel</span></h1>
 </div>
- 
+
 <div id="main" style="display:none">
+
+  <div class="profile-banner"></div>
+
   <div class="profile-hero">
-    <div class="profile-avatar" id="avatar">?</div>
-    <div>
-      <div class="profile-name" id="profileName">—</div>
-      <div class="profile-age" id="profileAge"></div>
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="avatar">?</div>
     </div>
+    <div class="profile-name" id="profileName">—</div>
+    <div class="profile-age" id="profileAge"></div>
     <button class="btn-edit" onclick="goEdit()">Profiel bewerken</button>
   </div>
- 
-  <div class="container">
-    <div class="section">
-      <div class="section-label">Over mij</div>
-      <div class="section-content" id="profileBio">Nog geen bio ingevuld.</div>
-    </div>
- 
-    <div class="section">
-      <div class="section-label">Interesses</div>
-      <div id="interestsContainer"></div>
+
+  <!-- Statistieken strook -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-num" id="statConnections">—</div>
+        <div class="stat-label">Connecties</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statPosts">—</div>
+        <div class="stat-label">Berichten</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="statDays">—</div>
+        <div class="stat-label">Dagen lid</div>
+      </div>
     </div>
   </div>
+
+  <div class="container">
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="section-label">Over mij</div>
+      </div>
+      <div class="section-content" id="profileBio">Nog geen bio ingevuld.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="section-label">Interesses</div>
+      </div>
+      <div id="interestsContainer"></div>
+    </div>
+
+  </div>
 </div>
- 
+
 <div id="loading" class="state-msg">
   <div class="spinner"></div>
   Profiel laden…
 </div>
- 
+
 <script>
   const API_BASE = "https://api.snadex.nl";
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token') || '';
- 
+
   function getInitials(name) {
     return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
- 
+
   function goEdit() {
     window.location.href = `${API_BASE}/profile/edit?token=${token}`;
   }
- 
+
+  function daysSince(dateStr) {
+    if (!dateStr) return null;
+    return Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000));
+  }
+
   async function loadProfile() {
     try {
       const res = await fetch(`${API_BASE}/profile`, {
         headers: { 'Authorization': token }
       });
- 
+
       if (!res.ok) throw new Error('Unauthorized');
       const user = await res.json();
- 
-      // Avatar
+
       const avatar = document.getElementById('avatar');
       if (user.profile_pic) {
         avatar.innerHTML = `<img src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none'">`;
       } else {
         avatar.textContent = getInitials(user.name);
       }
- 
+
       document.getElementById('profileName').textContent = user.name || 'Naamloos';
       document.getElementById('profileAge').textContent = user.age ? `${user.age} jaar` : '';
       document.getElementById('profileBio').textContent = user.bio || 'Nog geen bio ingevuld.';
- 
-      // Interests
+
+      document.getElementById('statConnections').textContent = user.connection_count ?? '0';
+      document.getElementById('statPosts').textContent = user.post_count ?? '0';
+      const days = daysSince(user.created_at);
+      document.getElementById('statDays').textContent = days !== null ? days : '—';
+
       const container = document.getElementById('interestsContainer');
       if (user.interests) {
         const tags = user.interests.split(',').map(i => i.trim()).filter(Boolean);
@@ -95,17 +242,17 @@
       } else {
         container.innerHTML = '<div class="empty-interests">Nog geen interesses gekozen.</div>';
       }
- 
+
       document.getElementById('loading').style.display = 'none';
       document.getElementById('main').style.display = 'block';
- 
+
     } catch (err) {
       document.getElementById('loading').innerHTML = `
-        <div class="icon">Fatal error</div>
+        <div class="icon">⚠️</div>
         Kon profiel niet laden.`;
     }
   }
- 
+
   loadProfile();
 </script>
 </body>

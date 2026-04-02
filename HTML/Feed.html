@@ -1,13 +1,242 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+  /* ── Card refinements ── */
+  .card {
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .card:active {
+    transform: scale(0.985);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  }
 
+  .card-top { position: relative; }
 
+  /* Age badge next to name */
+  .user-age {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Tags row (interests preview) */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 12px;
+  max-height: 64px;
+  overflow: hidden;
+}
+  .card-tag {
+    background: var(--accent2);
+    color: #5a4020;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .card-tag-more {
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.72rem;
+    padding: 3px 0;
+    flex-shrink: 0;
+  }
+
+  /* Divider inside card */
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 16px;
+  }
+
+  /* ── Profile sheet (slides up) ── */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 18, 8, 0.4);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .sheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    z-index: 201;
+    max-height: 82vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.32, 0, 0, 1);
+    padding-bottom: 40px;
+  }
+  .sheet.open {
+    transform: translateY(0);
+  }
+
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+
+  .sheet-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 20px 0;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .sheet-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--accent2);
+    border: 3px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--accent);
+    font-weight: 700;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+  .sheet-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .sheet-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .sheet-age {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: -6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .sheet-body {
+    padding: 18px 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .sheet-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .sheet-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px 0;
+  }
+  .sheet-section-icon {
+    width: 24px; height: 24px;
+    background: var(--accent2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sheet-section-icon svg {
+    width: 12px; height: 12px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .sheet-section-title {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+  }
+  .sheet-section-content {
+    padding: 8px 14px 14px;
+    font-size: 0.88rem;
+    color: #4a3f2f00;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .sheet-tags {
+    padding: 8px 14px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sheet-tag {
+    background: var(--accent2);
+    color: #5a4020;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #d4b88a;
+  }
+
+  .sheet-actions {
+    padding: 18px 20px 0;
+    display: flex;
+    gap: 10px;
+  }
+  .sheet-btn-connect {
+    flex: 1;
+    background: var(--connect);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .sheet-btn-connect:active { background: var(--connect-hover); transform: scale(0.98); }
+  .sheet-btn-connect.connected { background: #a0b8a8; cursor: default; }
+
+  .sheet-btn-close {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .sheet-btn-close:active { background: var(--border); }
+</style>
 </head>
 <body>
 
@@ -23,33 +252,63 @@
   </div>
 </div>
 
-<script>
-  // CONFIG — change this to your actual Flask base URL
-  const API_BASE = "https://api.snadex.nl";
+<!-- Profielblad -->
+<div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hero">
+    <div class="sheet-avatar" id="sheetAvatar"></div>
+    <div>
+      <div class="sheet-name" id="sheetName"></div>
+      <div class="sheet-age" id="sheetAge"></div>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-section" id="sheetBioSection">
+      <div class="sheet-section-label">
+        <div class="sheet-section-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="sheet-section-title">Over mij</div>
+      </div>
+      <div class="sheet-section-content" id="sheetBio"></div>
+    </div>
+    <div class="sheet-section" id="sheetInterestsSection" style="display:none">
+      <div class="sheet-section-label">
+        <div class="sheet-section-icon">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="sheet-section-title">Interesses</div>
+      </div>
+      <div class="sheet-tags" id="sheetTags"></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn-connect" id="sheetConnectBtn">Verbinden</button>
+    <button class="sheet-btn-close" onclick="closeSheet()">Sluiten</button>
+  </div>
+</div>
 
-  // Get session token passed from App Inventor via URL param
-  // App Inventor should open: feed.html?token=USERTOKEN
+<script>
+  const API_BASE = "https://api.snadex.nl";
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token') || '';
-
   const feed = document.getElementById('feed');
 
+  let currentSheetUserId = null;
+  let connectedIds = new Set();
+
+  // ── Feed ──
   async function loadFeed() {
     try {
       const res = await fetch(`${API_BASE}/feed`, {
         headers: { 'Authorization': token }
       });
-
       if (!res.ok) throw new Error('Server error ' + res.status);
-
       const users = await res.json();
 
       if (!users.length) {
-        feed.innerHTML = `
-          <div class="state-msg">
-            <div class="icon">🌿</div>
-            Geen nieuwe profielen op dit moment.
-          </div>`;
+        feed.innerHTML = `<div class="state-msg"><div class="icon">🌿</div>Geen nieuwe profielen op dit moment.</div>`;
         return;
       }
 
@@ -57,82 +316,162 @@
       users.forEach(user => renderCard(user));
 
     } catch (err) {
-      feed.innerHTML = `
-        <div class="state-msg">
-          <div class="icon">⚠️</div>
-          Kon feed niet laden.<br><small>${err.message}</small>
-        </div>`;
+      feed.innerHTML = `<div class="state-msg"><div class="icon">⚠️</div>Kon feed niet laden.<br><small>${err.message}</small></div>`;
     }
   }
 
   function getInitials(name) {
-    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
 
   function renderCard(user) {
     const card = document.createElement('div');
     card.className = 'card';
 
-    // Avatar: use profile_pic URL if available, else initials
-    let avatarHTML;
-    if (user.profile_pic) {
-      avatarHTML = `<img class="avatar" src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                    <div class="avatar-initials" style="display:none">${getInitials(user.name)}</div>`;
-    } else {
-      avatarHTML = `<div class="avatar-initials">${getInitials(user.name)}</div>`;
+    const avatarHTML = user.profile_pic
+      ? `<img class="avatar" src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+         <div class="avatar-initials" style="display:none">${getInitials(user.name)}</div>`
+      : `<div class="avatar-initials">${getInitials(user.name)}</div>`;
+
+    // Show up to 3 interest tags on the card
+    let tagsHTML = '';
+    if (user.interests) {
+      const tags = user.interests.split(',').map(t => t.trim()).filter(Boolean);
+      const visible = tags.slice(0, 3);
+      const extra = tags.length - visible.length;
+      tagsHTML = `<div class="card-tags">
+        ${visible.map(t => `<span class="card-tag">${t}</span>`).join('')}
+        ${extra > 0 ? `<span class="card-tag-more">+${extra}</span>` : ''}
+      </div>`;
     }
 
     card.innerHTML = `
       <div class="card-top">
         ${avatarHTML}
         <div class="user-info">
-          <div class="user-name">${user.name}</div>
-          <div class="user-age">${user.age} jaar</div>
+          <div class="user-name">${user.name || 'Naamloos'}</div>
+          <div class="user-age">${user.age ? user.age + ' jaar' : ''}</div>
         </div>
       </div>
       <div class="card-bio">${user.bio || 'Geen bio ingevuld.'}</div>
+      ${tagsHTML ? '<div class="card-divider"></div>' + tagsHTML : ''}
       <div class="card-actions">
-        <button class="btn-connect" onclick="connect(this, ${user.id})">Verbinden</button>
-        <button class="btn-skip" onclick="skip(this)">Overslaan</button>
+        <button class="btn-connect" id="connect-${user.id}" onclick="event.stopPropagation(); connectFromCard(this, ${user.id})">Verbinden</button>
+        <button class="btn-skip" onclick="event.stopPropagation(); skip(this)">Overslaan</button>
       </div>
     `;
+
+    // Tap card body (not buttons) → open sheet
+    card.addEventListener('click', () => openSheet(user));
 
     feed.appendChild(card);
   }
 
-  async function connect(btn, userId) {
-    btn.disabled = true;
-    btn.textContent = '⏳';
-
-    try {
-      const res = await fetch(`${API_BASE}/connect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token
-        },
-        body: JSON.stringify({ target_id: userId })
-      });
-
-      if (res.ok) {
-        btn.textContent = '✓ Verbonden';
-        btn.classList.add('connected');
-      } else {
-        btn.textContent = 'Verbinden';
-        btn.disabled = false;
-      }
-    } catch {
-      btn.textContent = 'Verbinden';
+  // ── Connect (from card) ──
+  async function connectFromCard(btn, userId) {
+    await doConnect(userId);
+    if (connectedIds.has(userId)) {
+      btn.textContent = '✓ Verbonden';
+      btn.classList.add('connected');
+      btn.disabled = true;
+      // Sync sheet button if open
+      if (currentSheetUserId === userId) syncSheetBtn();
+    } else {
       btn.disabled = false;
     }
   }
 
+  // ── Connect (shared logic) ──
+  async function doConnect(userId) {
+    try {
+      const res = await fetch(`${API_BASE}/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token },
+        body: JSON.stringify({ target_id: userId })
+      });
+      if (res.ok) connectedIds.add(userId);
+    } catch {}
+  }
+
   function skip(btn) {
     const card = btn.closest('.card');
-    card.style.transition = 'opacity 0.3s, transform 0.3s';
+    card.style.transition = 'opacity 0.25s, transform 0.25s';
     card.style.opacity = '0';
     card.style.transform = 'translateX(40px)';
-    setTimeout(() => card.remove(), 300);
+    setTimeout(() => card.remove(), 260);
+  }
+
+  // ── Profile sheet ──
+  function openSheet(user) {
+    currentSheetUserId = user.id;
+
+    // Avatar
+    const avatarEl = document.getElementById('sheetAvatar');
+    if (user.profile_pic) {
+      avatarEl.innerHTML = `<img src="${user.profile_pic}" alt="${user.name}" onerror="this.style.display='none'">`;
+    } else {
+      avatarEl.textContent = getInitials(user.name);
+    }
+
+    document.getElementById('sheetName').textContent = user.name || 'Naamloos';
+    document.getElementById('sheetAge').textContent = user.age ? `${user.age} jaar` : '';
+    document.getElementById('sheetBio').textContent = user.bio || 'Geen bio ingevuld.';
+
+    // Interests
+    const tagsEl = document.getElementById('sheetTags');
+    const interestsSection = document.getElementById('sheetInterestsSection');
+    if (user.interests) {
+      const tags = user.interests.split(',').map(t => t.trim()).filter(Boolean);
+      if (tags.length) {
+        tagsEl.innerHTML = tags.map(t => `<span class="sheet-tag">${t}</span>`).join('');
+        interestsSection.style.display = 'block';
+      } else {
+        interestsSection.style.display = 'none';
+      }
+    } else {
+      interestsSection.style.display = 'none';
+    }
+
+    syncSheetBtn();
+
+    document.getElementById('backdrop').classList.add('open');
+    document.getElementById('sheet').classList.add('open');
+  }
+
+  function syncSheetBtn() {
+    const btn = document.getElementById('sheetConnectBtn');
+    if (connectedIds.has(currentSheetUserId)) {
+      btn.textContent = '✓ Verbonden';
+      btn.classList.add('connected');
+      btn.onclick = null;
+    } else {
+      btn.textContent = 'Verbinden';
+      btn.classList.remove('connected');
+      btn.onclick = () => sheetConnect();
+    }
+  }
+
+  async function sheetConnect() {
+    const btn = document.getElementById('sheetConnectBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    await doConnect(currentSheetUserId);
+    btn.disabled = false;
+    syncSheetBtn();
+
+    // Also update card button
+    const cardBtn = document.getElementById(`connect-${currentSheetUserId}`);
+    if (cardBtn && connectedIds.has(currentSheetUserId)) {
+      cardBtn.textContent = '✓ Verbonden';
+      cardBtn.classList.add('connected');
+      cardBtn.disabled = true;
+    }
+  }
+
+  function closeSheet() {
+    document.getElementById('backdrop').classList.remove('open');
+    document.getElementById('sheet').classList.remove('open');
+    currentSheetUserId = null;
   }
 
   loadFeed();
