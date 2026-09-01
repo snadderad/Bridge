@@ -2,7 +2,7 @@
 
 - **Project: Bridge, Gemaakt door Snadderad**
 - **Doel: Oudere mensen met elkaar verbinden via een eenvoudige chat/social app.**
-- **Type: School/MIT project,** ***niet bedoeld voor publieke release.***
+- **Type: School project,** ***niet bedoeld voor publieke release(niet veilig)***
 
 Dit is de backend server voor de Bridge-app. Hij regelt gebruikers, profielen, connecties en berichten. De server draait over HTTP op poort 3000.
 
