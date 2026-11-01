@@ -16,5 +16,5 @@ node_modules/
 .vscode/
 EOF
 setup_test_user.py
-/Userdata/*
+/userdata/*
 *.db
