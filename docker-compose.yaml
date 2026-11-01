@@ -1,0 +1,12 @@
+services:
+  bridge:
+    build: .
+    container_name: bridge
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./Userdata:/app/Userdata
+    environment:
+      - DEBUG_MODE=false
+ 
