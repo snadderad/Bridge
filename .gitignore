@@ -17,3 +17,4 @@ node_modules/
 EOF
 setup_test_user.py
 /Userdata/*
+*.db
